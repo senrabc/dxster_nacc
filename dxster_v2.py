@@ -32,7 +32,7 @@ Usage: dxster_v2.py [options]
 Options:
     -h, --help
     -c, --config=<file>  Path to the config file [TODO: MAKE THIS WORK]
-    -e, --ealgdx_data=<file> Full path to ealgdx.csv file [ex. '/home/senrabc/ealgdx.csv']
+    -e, --ealgdx_file=<file> Full path to ealgdx.csv file [ex. '/home/senrabc/ealgdx.csv']
     -i, --input_file=<file>  Path to CSV data file [ex. '/home/senrabc/mydata.csv']
     -o, --output_file=<file>  Path to output CSV file [ex. '~/myoutput.csv']
     -r, --property_here        THIS NEEDS REMOVAL: Start the server if yes [default: 'no']
@@ -49,9 +49,9 @@ import pprint
 
 class Dxster(object):
     #create dicts here to hold ref data files
-    dict_input_file=[]
-    dict_output_file={}
-    dict_ealgdx_file={}
+    list_input_file=[]
+    list_output_file=[]
+    list_ealgdx_file=[]
 
 
     def __init__(self, my_property, **kwargs):
@@ -63,20 +63,23 @@ class Dxster(object):
         # using kwargs.pop will return '' if no arg present
         self.input_file = kwargs.pop('input_file','')
         self.output_file = kwargs.pop('output_file','')
-        self.ealgdx_file = kwargs.pop('ealgdx_data','')
+        self.ealgdx_file = kwargs.pop('ealgdx_file','')
 
-    def load_dict_input_file(self, input_file):
+    def load_list_input_file(self, input_file):
         # This function should read the CSV file and load it into the class
         # dict called 'dict_input_file' that will hold the data to be processed
         reader = csv.DictReader(open(input_file, 'rb'))
         for line in reader:
-            self.dict_input_file.append(line)
-        return  self.dict_input_file
+            self.list_input_file.append(line)
+        return  self.list_input_file
 
-    def load_dict_ealgdx_file():
+    def load_list_ealgdx_file(self,ealgdx_file):
         # This function should read the CSV file and load it into the class
         # dict called 'dict_ealgdx_file' that will hold the reference algo data
-        print ''
+        reader = csv.DictReader(open(ealgdx_file, 'rb'))
+        for line in reader:
+            self.list_ealgdx_file.append(line)
+        return  self.list_ealgdx_file
     #Sample Function for CLI args. REMOVE later
     def print_msg(self):
         print self.my_property
@@ -85,8 +88,11 @@ class Dxster(object):
         print self.ealgdx_file
 
         #test load of the input file
-        input_values = self.load_dict_input_file(self.input_file)
-        pprint.pprint(input_values)
+        #input_values = self.load_list_input_file(self.input_file)
+        #pprint.pprint(input_values)
+        #test ealgdx load
+        ealgdx_values = self.load_list_ealgdx_file(self.ealgdx_file)
+        pprint.pprint(ealgdx_values)
 
 if __name__ == '__main__':
     args = docopt(__doc__)
@@ -97,7 +103,7 @@ if __name__ == '__main__':
         my_property=args['--property_here'],
         input_file=args['--input_file'],
         output_file=args['--output_file'],
-        ealgdx_data=args['--ealgdx_data']
+        ealgdx_file=args['--ealgdx_file']
 
     )
     dxster.print_msg()
