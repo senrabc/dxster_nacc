@@ -69,8 +69,7 @@ class Dxster(object):
         # get the reference table
         self.ealgdx_values = np.genfromtxt(self.ealgdx_file, delimiter=',', names=True, dtype=None)
 
-        #compile patterns for search function ... justonce
-        self.pat_naccudsd = re.compile("/naccudsd=/g")
+
 
 
     # def load_list_input_file(self, input_file):
@@ -110,39 +109,66 @@ class Dxster(object):
         # physdx_cdrsb = physdx_cdrsb.replace("'","")
         # physdx_cdrsb = float(physdx_cdrsb)
         # pprint.pprint(physdx_cdrsb)
+        normcog=normcog
+        naccudsd=naccudsd
+        nacctmci=nacctmci
+        demented=demented
+
+        k=0
+        j=0
         for i,r in enumerate(self.ealgdx_values):
-            #print('ealgdx values ...')
-            ealgdx=(str(cdrsum) + ':')
-            #print('nacc_npdx_equivalent=' + r[2])
+            k=k+1
+            # naccudsd=1 and normcog=1 are equivalents in this case
+            # in the data we have as of 20170724 the ALWAYS appear together
+            # so only need to test for one
+            if (normcog==1):
+                if ("normcog=1" in r[2].replace("'","")):
+                    if (float(cdrsum) == float(r[0].replace("'",""))):
+                        j=j+1
+                        ealgdx = 'normcog=1 condition = true : ' + str(j) + ':'  + str(k)
+            elif (naccudsd==2):
+               if (float(cdrsum) == float(r[0].replace("'",""))):
+                   if ("naccudsd=2" in r[2].replace("'","")):
+                       j=j+1
+                       ealgdx = 'naccudsd=2 condition = true : ' + str(j)+ ':'  + str(k)
+            elif (naccudsd==3):
+                if ("naccudsd=3" in r[2].replace("'","")):
+                    if (float(cdrsum) == float(r[0].replace("'",""))):
+                        j=j+1
+                        ealgdx = 'naccudsd=3 condition = true : ' + str(j)+ ':'  + str(k)
+                        #ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
+                    else:
 
-            #look at only the npdx wih naccudsd
-            if 'naccudsd' in r[2]:
-            #     #print('nacc_npdx_equivalent=' + r[2] + ':' + str(naccudsd))
-                 #print('found')
-                 ealgdx=ealgdx+'naccudsd found ... '
-                 print(ealgdx)
+                        ealgdx = '[ERROR]: Non case for this in the algorithm. Params  \
+                        cdrsum %s, normcog %s, naccudsd %s, nacctmci %s, demented %s ' % (cdrsum, normcog, naccudsd, nacctmci, demented)
 
-            if 'normcog' in r[2]:
-                ealgdx=ealgdx+'normcog found ... '
-                print(ealgdx)
+            # naccudsd=4 and demented=1 are equivalents in this case
+            # in the data we have as of 20170724 the ALWAYS appear together
+            # so only need to test for one
+            elif (demented==1):
+                if ("demented=1" in r[2].replace("'","")):
+                    if (float(cdrsum) == float(r[0].replace("'",""))):
+                        j=j+1
+                        ealgdx = 'demented=1 condition = true : ' + str(j)+ ':' + str(k)
+                        #ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
+            elif (nacctmci==3):
+                if ("nacctmci=3" in r[2].replace("'","")):
+                    if (float(cdrsum) == float(r[0].replace("'",""))):
+                        j=j+1
+                        ealgdx = 'nacctmci=3 condition = true : ' + str(j)+ ':' + str(k)
+                        #ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
+            elif (nacctmci==4):
+                if ("nacctmci=4" in r[2].replace("'","")):
+                    if (float(cdrsum) == float(r[0].replace("'",""))):
+                        j=j+1
+                        ealgdx = 'nacctmci=4 condition = true : ' + str(j)+ ':' + str(k)
+                        #ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
+            else:
+                 ealgdx="  else condition true "
+                # ealgdx = '[ERROR]: Non case for this in the algorithm. Params  \
+                # cdrsum %s, normcog %s, naccudsd %s, nacctmci %s, demented %s ' % (cdrsum, normcog, naccudsd, nacctmci, demented)
 
-            if 'nacctmci' in r[2]:
-                ealgdx=ealgdx+'nacctmci found ... '
-                print(ealgdx)
-
-            if 'demented' in r[2]:
-                ealgdx=ealgdx+'demented found ... '
-                print(ealgdx)
-
-
-
-
-
-
-
-            # for n in r.dtype.names:
-            #       print(r[n])
-
+        return ealgdx
 
 
 # this function will take the input data and loop through it line by line
@@ -171,7 +197,9 @@ class Dxster(object):
             nacctmci = input_data['NACCTMCI'][i]
             demented = input_data['DEMENTED'][i]
             # this will return the algdx from the lookup
-            self.search_ealgdx(cdrsum,naccudsd,normcog,nacctmci,demented)
+
+            ealgdx = self.search_ealgdx(cdrsum,naccudsd,normcog,nacctmci,demented)
+            print(str(i) + ':' + naccid + ':cd=' + str(cdrsum) + ':cog=' + str(normcog) +  ':uds=' + str(naccudsd) +  ':dim=' + str(demented) + ':tmci=' + str(nacctmci) + ' || ealgdx_str:' + ealgdx)
 
             # print(input_data['NACCID'][i])
             # for n in r.dtype.names:
