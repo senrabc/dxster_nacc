@@ -43,7 +43,7 @@ import csv
 import sys
 import pprint
 import numpy as np
-import re
+
 
 #TODO: take inputs from a config file so you don't have to enumerate all args
 #       on command line
@@ -89,33 +89,18 @@ class Dxster(object):
     #     return  self.list_ealgdx_file
 
     def search_ealgdx(self,cdrsum,naccudsd,normcog,nacctmci,demented):
-        # required inputs
-        # CDR sum of boxes (CDRSUM)
-        # NACCUDSD
-        # NORMCOG
-        # NACCTMCI
-        # DEMENTED
-        # output
-        # ealgdx
-        ealgdx=''
-        # print('search_ealgdx ...')
-        # print(cdrsum)
-        # print(naccudsd)
-        # print(normcog)
-        # print(nacctmci)
-        # print(demented)
-        # #pprint.pprint(ealgdx_values)
-        # physdx_cdrsb = ealgdx_values['physdx_cdrsb'][0]
-        # physdx_cdrsb = physdx_cdrsb.replace("'","")
-        # physdx_cdrsb = float(physdx_cdrsb)
-        # pprint.pprint(physdx_cdrsb)
+
+
         normcog=normcog
         naccudsd=naccudsd
         nacctmci=nacctmci
         demented=demented
-
+        debug_str=''
+        ealgdx = ''
+        # cntrs for debugging lookup
         k=0
         j=0
+
         for i,r in enumerate(self.ealgdx_values):
             k=k+1
             # naccudsd=1 and normcog=1 are equivalents in this case
@@ -125,21 +110,24 @@ class Dxster(object):
                 if ("normcog=1" in r[2].replace("'","")):
                     if (float(cdrsum) == float(r[0].replace("'",""))):
                         j=j+1
-                        ealgdx = 'normcog=1 condition = true : ' + str(j) + ':'  + str(k)
+                        ealgdx = r[3]
+                        debug_str = 'normcog=1 condition = true : ' + str(j) + ':'  + str(k)+ ' cdrmatch=' + str(cdrsum) + ':' + str(r[0])
             elif (naccudsd==2):
                if (float(cdrsum) == float(r[0].replace("'",""))):
                    if ("naccudsd=2" in r[2].replace("'","")):
                        j=j+1
-                       ealgdx = 'naccudsd=2 condition = true : ' + str(j)+ ':'  + str(k)
+                       ealgdx = r[3]
+                       debug_str = 'naccudsd=2 condition = true : ' + str(j)+ ':'  + str(k)+ ' cdrmatch=' + str(cdrsum) + ':' + str(r[0])
             elif (naccudsd==3):
                 if ("naccudsd=3" in r[2].replace("'","")):
                     if (float(cdrsum) == float(r[0].replace("'",""))):
                         j=j+1
-                        ealgdx = 'naccudsd=3 condition = true : ' + str(j)+ ':'  + str(k)
+                        ealgdx = r[3]
+                        debug_str = 'naccudsd=3 condition = true : ' + str(j)+ ':'  + str(k)+ ' cdrmatch=' + str(cdrsum) + ':' + str(r[0])
                         #ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
                     else:
-
-                        ealgdx = '[ERROR]: Non case for this in the algorithm. Params  \
+                        ealgdx = '[ERROR]'
+                        debug_str = '[ERROR]: conflicting match for this in the algorithm. Params  \
                         cdrsum %s, normcog %s, naccudsd %s, nacctmci %s, demented %s ' % (cdrsum, normcog, naccudsd, nacctmci, demented)
 
             # naccudsd=4 and demented=1 are equivalents in this case
@@ -149,44 +137,57 @@ class Dxster(object):
                 if ("demented=1" in r[2].replace("'","")):
                     if (float(cdrsum) == float(r[0].replace("'",""))):
                         j=j+1
-                        ealgdx = 'demented=1 condition = true : ' + str(j)+ ':' + str(k)
+                        ealgdx = r[3]
+                        debug_str = 'demented=1 condition = true : ' + str(j)+ ':' + str(k)+ ' cdrmatch=' + str(cdrsum) + ':' + str(r[0])
                         #ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
             elif (nacctmci==3):
                 if ("nacctmci=3" in r[2].replace("'","")):
                     if (float(cdrsum) == float(r[0].replace("'",""))):
                         j=j+1
-                        ealgdx = 'nacctmci=3 condition = true : ' + str(j)+ ':' + str(k)
+                        ealgdx = r[3]
+                        debug_str = 'nacctmci=3 condition = true : ' + str(j)+ ':' + str(k)+ ' cdrmatch=' + str(cdrsum) + ':' + str(r[0])
                         #ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
             elif (nacctmci==4):
                 if ("nacctmci=4" in r[2].replace("'","")):
                     if (float(cdrsum) == float(r[0].replace("'",""))):
                         j=j+1
-                        ealgdx = 'nacctmci=4 condition = true : ' + str(j)+ ':' + str(k)
+                        ealgdx = r[3]
+                        debug_str = 'nacctmci=4 condition = true : ' + str(j)+ ':' + str(k) + ' cdrmatch=' + str(cdrsum) + ':' + str(r[0])
                         #ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
             else:
-                 ealgdx="  else condition true "
+                 ealgdx = '[ERROR]'
+                 debug_str = "  [ERROR] else condition true. conflicting case for these params "
                 # ealgdx = '[ERROR]: Non case for this in the algorithm. Params  \
                 # cdrsum %s, normcog %s, naccudsd %s, nacctmci %s, demented %s ' % (cdrsum, normcog, naccudsd, nacctmci, demented)
 
+        # for development the csv header is in the form [..., ealgdx, debug_string]
+        ealgdx = ealgdx + ',' + debug_str
         return ealgdx
 
 
 # this function will take the input data and loop through it line by line
 # at each line it will do a lookup_algdx to find the correct algdx from the
 # ealgdx ref data in list_ealgdx_file
+# required inputs
+# CDR sum of boxes (CDRSUM)
+# NACCUDSD
+# NORMCOG
+# NACCTMCI
+# DEMENTED
     def calc_algdx(self):
 
-        # required inputs
-        # CDR sum of boxes (CDRSUM)
-        # NACCUDSD
-        # NORMCOG
-        # NACCTMCI
-        # DEMENTED
-
+        #form the CSV output header
+        output_str = 'naccid' + ',' + 'naccvnum' + ',' + 'cdrsum' + ',' + \
+                    'naccudsd' + ',' + 'normcog' + ',' + 'nacctmci' + ',' + \
+                    'demented' + ',' + 'ealgdx' + ',' + 'debug_string \n'
 
         #input_values = self.load_list_input_file(self.input_file)
         #pprint.pprint(input_values)
         input_data = np.genfromtxt(self.input_file, delimiter=',', names=True, dtype=None)
+
+        
+
+
         for i,r in enumerate(input_data):
 
             naccid = input_data['NACCID'][i]
@@ -196,48 +197,19 @@ class Dxster(object):
             normcog = input_data['NORMCOG'][i]
             nacctmci = input_data['NACCTMCI'][i]
             demented = input_data['DEMENTED'][i]
-            # this will return the algdx from the lookup
 
+
+
+            # ealgdx output is in the form (ealgdx, debugstring)
             ealgdx = self.search_ealgdx(cdrsum,naccudsd,normcog,nacctmci,demented)
-            print(str(i) + ':' + naccid + ':cd=' + str(cdrsum) + ':cog=' + str(normcog) +  ':uds=' + str(naccudsd) +  ':dim=' + str(demented) + ':tmci=' + str(nacctmci) + ' || ealgdx_str:' + ealgdx)
+            #format the output for csv out,
 
-            # print(input_data['NACCID'][i])
-            # for n in r.dtype.names:
-            #     print(r[n])
-
-
-
-        # pprint.pprint(input_data['NACCID'][0])
-        # pprint.pprint(input_data['NACCVNUM'][0])
-        # pprint.pprint(input_data['CDRSUM'][0])
-        # pprint.pprint(input_data['NACCUDSD'][0])
-        # pprint.pprint(input_data['NORMCOG'][0])
-        # pprint.pprint(input_data['NACCTMCI'][0])
-        # pprint.pprint(input_data['DEMENTED'][0])
-        # pprint.pprint(len(input_data))
-
-
-
-        # print(naccid)
-        # print(naccvnum)
-        # print(cdrsum)
-        # print(naccudsd)
-        # print(normcog)
-        # print(nacctmci)
-        # print(demented)
-
-
-
-
-
-        # Loop through the inpu values list and then search the ealgdx_values to see if
-        # you can find the matching algdx and then write out to outpu_list
-        # for val in input_values:
-        #     #pprint.pprint(val)
-        #     for a_item in val:
-        #         pprint.pprint(a_item)
-
-        # return pprint.pprint(ealgdx_values)
+            output_str = output_str + str(naccid) + ',' + str(naccvnum) + ',' + str(cdrsum) + ',' + \
+                        str(naccudsd) + ',' + str(normcog) + ',' + str(nacctmci) + ',' + \
+                        str(demented) + ',' + str(ealgdx) + '\n'
+            #print(str(i) + ':' + naccid + ':cd=' + str(cdrsum) + ':cog=' + str(normcog) +  ':uds=' + str(naccudsd) +  ':dim=' + str(demented) + ':tmci=' + str(nacctmci) + ' || ealgdx_str:' + ealgdx)
+        print(output_str)
+        #return output_str
 
     #Sample Function for CLI args. REMOVE later
     def print_msg(self):
