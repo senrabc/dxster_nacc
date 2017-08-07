@@ -28,6 +28,8 @@
 
 Usage: dxster_v2.py [options]
 
+#time python dxster_v2.py -i ../temp/top100_nacc_dataset_0302217.csv -e ../docs/ealgdx_algorithm_table.csv
+
 
 Options:
     -h, --help
@@ -41,6 +43,7 @@ Options:
 
 from docopt import docopt
 import csv
+import sqlite3
 import sys
 import pprint
 #import numpy as np
@@ -62,7 +65,8 @@ class Dxster(object):
     DEBUG = False
     #DEBUG = True
 
-    if (DEBUG): print '[DEBUG] Debug on... Will now print all debug statements to stdout.'
+    if (DEBUG): print '[DEBUG] Debug on... Will now print all debug statements \
+        to stdout.'
 
     def __init__(self, **kwargs):
 
@@ -77,106 +81,114 @@ class Dxster(object):
         self.f = open(self.ealgdx_file,'rt')
         self.ealgdx_values = csv.reader(self.f, delimiter=',')
 
-        #self.ealgdx_values = np.genfromtxt(self.ealgdx_file, delimiter=',', names=True, dtype=None)
-        #self.ealgdx_values = open(self.ealgdx_file, 'rt')
-
-
-
+        # startup the db
+        self.db = sqlite3.connect(":memory:")
+        self.c = self.db.cursor()
 
     def search_ealgdx(self,cdrsum,naccudsd,normcog,nacctmci,demented):
+        # these are the default fields. This will break if the csv changes
+        # TODO: read csv header, maybe... this is the ref data and needs to not chg.
 
-        # reset the iterator to the begining.
-        self.f.seek(0)
+        # # for some reason you need to make sure you drop the table or the cache
+        # # will come back to bite you and create duplicates.
+        # self.c.execute("drop table if not exists ealgdx_algorithm_table")
+        self.c.execute("create table if not exists ealgdx_algorithm_table (physdx_cdrsb,\
+            npdx,npdx_nacc_uds_equivalent,algdx,ref_uri)")
 
-        normcog=normcog
-        naccudsd=naccudsd
-        nacctmci=nacctmci
-        demented=demented
-        debug_str=''
-        ealgdx = ''
-        if (self.DEBUG): print '[DEBUG] Start new case ...'
-        if (self.DEBUG): print '[DEBUG] In search_ealgdx, input normcog=' + normcog
-        if (self.DEBUG): print '[DEBUG] In search_ealgdx, input naccudsd=' + naccudsd
-        if (self.DEBUG): print '[DEBUG] In search_ealgdx, input nacctmci=' + nacctmci
-        if (self.DEBUG): print '[DEBUG] In search_ealgdx, input demented=' + demented
-        # cntrs for debugging lookup
-        k=0
-        j=0
         # skip the header row
         next(self.ealgdx_values, None)
 
+        # load the alog lookup data from the input file
         for row in self.ealgdx_values:
-            #print (row)
-            k=k+1
-            # naccudsd=1 and normcog=1 are equivalents in this case
-            # in the data we have as of 20170724 the ALWAYS appear together
-            # so only need to test for one
-            # pdb.set_trace()
-            if (int(normcog)==1):
-                if (self.DEBUG): print '[DEBUG] In normcog=1' + str(k)
-                if ("normcog=1" in row[2].replace("'","")):
-                    if (float(cdrsum) == float(row[0].replace("'",""))):
-                        j=j+1
-                        ealgdx = row[3]
-                        debug_str = 'normcog=1 condition = true : ' + str(j) + ':'  + str(k)+ ' cdrmatch=' + str(cdrsum) + ':' + str(row[0])
-                        if (self.DEBUG): print debug_str
-            elif (int(naccudsd)==2):
-               if (self.DEBUG): print '[DEBUG] In naccudsd=2'
-               if (float(cdrsum) == float(row[0].replace("'",""))):
-                   if ("naccudsd=2" in row[2].replace("'","")):
-                       j=j+1
-                       ealgdx = row[3]
-                       debug_str = 'naccudsd=2 condition = true : ' + str(j)+ ':'  + str(k)+ ' cdrmatch=' + str(cdrsum) + ':' + str(row[0])
-                       if (self.DEBUG): print debug_str
-            elif (int(naccudsd)==3):
-                #pdb.set_trace()
-                if (self.DEBUG): print '[DEBUG] In naccudsd=3 ' + str(row[2]) + ", " + str(k)
-                if ("naccudsd=3" in row[2].replace("'","")):
-                    if (float(cdrsum) == float(row[0].replace("'",""))):
-                        j=j+1
-                        ealgdx = row[3]
-                        debug_str = 'naccudsd=3 condition = true : ' + str(j)+ ':'  + str(k)+ ' cdrmatch=' + str(cdrsum) + ':' + str(row[0])
-                        if (self.DEBUG): print debug_str
-                    else:
-                        if (self.DEBUG): print '[DEBUG] In else condition for naccudsd=3'
-                        ealgdx = '[ERROR]'
-                        debug_str = '[ERROR]: conflicting match for this in the algorithm. Params  \
-                        cdrsum %s, normcog %s, naccudsd %s, nacctmci %s, demented %s ' % (cdrsum, normcog, naccudsd, nacctmci, demented)
-                        if (self.DEBUG): print debug_str
-            # naccudsd=4 and demented=1 are equivalents in this case
-            # in the data we have as of 20170724 the ALWAYS appear together
-            # so only need to test for one
-            elif (int(demented)==1):
-                if ("demented=1" in row[2].replace("'","")):
-                    if (float(cdrsum) == float(row[0].replace("'",""))):
-                        j=j+1
-                        ealgdx = row[3]
-                        debug_str = 'demented=1 condition = true : ' + str(j)+ ':' + str(k)+ ' cdrmatch=' + str(cdrsum) + ':' + str(row[0])
-                        if (self.DEBUG): print debug_str
-            elif (int(nacctmci)==3):
-                if ("nacctmci=3" in row[2].replace("'","")):
-                    if (float(cdrsum) == float(row[0].replace("'",""))):
-                        j=j+1
-                        ealgdx = row[3]
-                        debug_str = 'nacctmci=3 condition = true : ' + str(j)+ ':' + str(k)+ ' cdrmatch=' + str(cdrsum) + ':' + str(row[0])
-                        if (self.DEBUG): print debug_str
-            elif (int(nacctmci)==4):
-                if ("nacctmci=4" in row[2].replace("'","")):
-                    if (float(cdrsum) == float(row[0].replace("'",""))):
-                        j=j+1
-                        ealgdx = row[3]
-                        debug_str = 'nacctmci=4 condition = true : ' + str(j)+ ':' + str(k) + ' cdrmatch=' + str(cdrsum) + ':' + str(row[0])
-                        if (self.DEBUG): print debug_str
+            values_list = '"' + row[0] + '","' + row[1] + '","' + row[2] + '","' \
+                + row[3] + '","' + row[4] + '"'
+            #print(values_list)
+            sql_stmt = 'INSERT INTO ealgdx_algorithm_table (physdx_cdrsb,npdx,\
+            npdx_nacc_uds_equivalent,algdx,ref_uri) VALUES ('+ values_list + ')'
+            if (self.DEBUG): print '[DEBUG] In search_algdx. sql_stmt=' + \
+            sql_stmt
+            self.c.execute(sql_stmt)
+
+        # search query. Most cases return only one result
+        # a few I have tested return 2 for naccudsd >=3 and a nacctmci >=2
+        # in this case the science team decided that naccudsd >= 3 ealgdx
+        # will take precedence. Need to trap multiples.
+
+        # example query
+        # SELECT algdx FROM ealgdx_algorithm_table
+        # Where physdx_cdrsb = '1.5' AND
+        # (
+            # npdx_nacc_uds_equivalent ='demented=0' or
+            # npdx_nacc_uds_equivalent ='nacctmci=2' or
+            # npdx_nacc_uds_equivalent ='normcog=0' or
+            # npdx_nacc_uds_equivalent ='naccudsd=3'
+        # )
+
+        # This first case handles disagrement between nacctmci with a normal
+        # but same cdrsum with naccudsd yielding `mild-moderate mci`
+        if ( int(naccudsd)==3 and 1.0<=float(cdrsum)<=1.5 ):
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+        # handle case where normcog = 1 and naccudsd =1 ALWAYS equivalents
+        # both return `normal`
+        elif ( int(naccudsd)==1 and int(normcog)==1 ):
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+        # handle case where both naccudsd=3 and nacctmci=2 return `dementia`
+        # for the given range of cdrsb
+        elif ( int(naccudsd)==3 and int(nacctmci)==2 and 4.5<=float(cdrsum)<=9.5 ):
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+        # handle case where both naccudsd=3 and nacctmci=1 return `mci`
+        # for the given range of cdrsb
+        elif ( int(naccudsd)==3 and int(nacctmci)==1 and 2.5<=float(cdrsum)<=3.0 ):
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+
+        else:
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s" or \
+                npdx_nacc_uds_equivalent ="normcog=%s" or \
+                npdx_nacc_uds_equivalent ="nacctmci=%s" or \
+                npdx_nacc_uds_equivalent ="demented=%s" )' % (cdrsum, naccudsd, \
+                normcog, nacctmci, demented)
+
+        #print(sql_stmt2)
+        if (self.DEBUG): print '[DEBUG] In search_algdx. sql_stmt2=' + sql_stmt2
+
+        # need to error out for now if 2 rows returned
+        # Most cases return only one result
+        # a few I have tested return 2 for naccudsd >=3 and a nacctmci >=2
+        # in this case the science team decided that naccudsd >= 3 ealgdx
+        # will take precedence. Need to trap multiples.
+        #print(sql_stmt2)
+
+        i = 0
+        #recset = self.c.execute('select * from ealgdx_algorithm_table')
+        recset = self.c.execute(sql_stmt2)
+        #print(recset)
+        for row in recset:
+            i=i+1
+            # print(row[0] + ' cnt:' + str(i))
+
+            # ealgdx = row[0] + ', rowcount:' + str(i) + ': sql=' + sql_stmt2
+            if (i==1):
+                ealgdx = row[0]
             else:
-                ealgdx = '[ERROR]'
-                debug_str = "  [ERROR] else condition true. conflicting case for these params "
-                if (self.DEBUG): print debug_str
-
-        # for development the csv header is in the form [..., ealgdx, debug_string]
-        ealgdx = ealgdx + ',' + debug_str
-
+                ealgdx = '[ERROR]: Multiple Values Returned for params. CNT=%s , SQL: %s ' % (str(i), sql_stmt2)
+        if i==0:
+                ealgdx = '[ERROR]: Query returned no mathces. CNT=%s , SQL: %s ' % (str(i), sql_stmt2) 
 
         return ealgdx
+
+
+
+
 
 
 # this function will take the input data and loop through it line by line
@@ -266,4 +278,3 @@ if __name__ == '__main__':
     #dxster.print_msg()
 
     dxster.calc_algdx()
-    #dxster.search_ealgdx()

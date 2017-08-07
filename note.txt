@@ -1,0 +1,28 @@
+#pprint.pprint(r)
+
+      #capture all cases for normcog=1
+      # in the data whenever normcog=a naccudsd IS ALWAYS 1 and vice versa
+      # this handles both cases
+      if (int(normcog)==1 and "'normcog=1'" in r[2]):
+          if (float(cdrsum) == float(r[0].replace("'",""))):
+              ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3] +':' + 'ealgdx=' + r[3])
+              break
+
+      # look at only the npdx wih naccudsd
+      elif (int(naccudsd)==2 and "'naccudsd=2'" in r[2]):
+          if (float(cdrsum) == float(r[0].replace("'",""))):
+              ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
+          break
+
+      # look at only the npdx wih naccudsd
+      elif (int(naccudsd)==3 and "'naccudsd=3'" in r[2]):
+          if (float(cdrsum) == float(r[0].replace("'",""))):
+              ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
+          break
+      # look at only the npdx wih naccudsd
+      elif (int(naccudsd)==4 and "'naccudsd=4'" in r[2]):
+          if (float(cdrsum) == float(r[0].replace("'",""))):
+              ealgdx = (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] +':' + r[3]+':' + 'ealgdx=' + r[3])
+          break
+      else:
+          ealgdx = "error:cd=" +  (str(cdrsum) + ':' + r[0].replace("'","") +':' + r[2] + ':' + r[3]+ ':' + 'ex=' + r[3])
