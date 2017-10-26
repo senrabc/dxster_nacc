@@ -144,7 +144,13 @@ class Dxster(object):
                 (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
         # handle case where both naccudsd=3 and nacctmci=1 return `mci`
         # for the given range of cdrsb
-        elif ( int(naccudsd)==3 and int(nacctmci)==1 and 2.5<=float(cdrsum)<=3.0 ):
+        elif ( int(naccudsd)==3 and int(nacctmci)==1 and 2.5<=float(cdrsum)<=4.0 ):
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+        # handle case where both naccudsd=3 and nacctmci=2 return `mci`
+        # for the given range of cdrsb
+        elif ( int(naccudsd)==3 and int(nacctmci)==2 and 2.5<=float(cdrsum)<=2.5 ):
             sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
                 WHERE physdx_cdrsb = "%s" AND \
                 (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
@@ -182,7 +188,7 @@ class Dxster(object):
             else:
                 ealgdx = '[ERROR]: Multiple Values Returned for params. CNT=%s , SQL: %s ' % (str(i), sql_stmt2)
         if i==0:
-                ealgdx = '[ERROR]: Query returned no mathces. CNT=%s , SQL: %s ' % (str(i), sql_stmt2) 
+                ealgdx = '[ERROR]: Query returned no mathces. CNT=%s , SQL: %s ' % (str(i), sql_stmt2)
 
         return ealgdx
 
