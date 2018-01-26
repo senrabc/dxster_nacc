@@ -180,13 +180,26 @@ class Dxster(object):
         #print(recset)
         for row in recset:
             i=i+1
-            # print(row[0] + ' cnt:' + str(i))
 
-            # ealgdx = row[0] + ', rowcount:' + str(i) + ': sql=' + sql_stmt2
+            # set on the first run through so you can check to see if its the
+            # same every time. This happens with mci so if all duplicates are
+            # the same return the value. Example, if all row conditions return
+            # mci then the ealgdx should be mci otherwise if they disagree
+            # throw an error
+
+            local_ealgdx = row[0]
+
+            # Here there's only one row so thats the value we want.
             if (i==1):
-                ealgdx = row[0]
+                ealgdx = local_ealgdx
+            # this is where we are checking to see if each rec returned is
+            # the same
+            elif (local_ealgdx == row[0]):
+                    ealgdx = local_ealgdx
             else:
-                ealgdx = '[ERROR]: Multiple Values Returned for params. CNT=%s , SQL: %s ' % (str(i), sql_stmt2)
+                    ealgdx = '[ERROR]: Multiple Values Returned for params. CNT=%s , SQL: %s ' % (str(i), sql_stmt2)
+        # no rows returned is another problem. We always expect at least one
+        # row
         if i==0:
                 ealgdx = '[ERROR]: Query returned no mathces. CNT=%s , SQL: %s ' % (str(i), sql_stmt2)
 
@@ -252,6 +265,52 @@ class Dxster(object):
         print(output_str)
         #return output_str
 
+    def calc_algdx_csv(self):
+        f = open(self.input_file)
+        r = csv.reader(f, delimiter=',')
+        row_0 = r.next()
+        row_0.append('ealgdx')
+        row_0.append('debug_string')
+
+        #print(row_0)
+        # this needs to be fixed to pass in the output file path info from
+        # the args. this goes in 12 seconds versus calc-algdx not completeing
+        # as a string operation when run with 100k input rows
+        with open('../temp/output.csv', 'w') as csvoutput:
+            writer = csv.writer(csvoutput)
+            writer.writerow(row_0)
+
+
+            for item in r:
+                naccid=item[1]
+                naccvnum=item[2]
+                cdrsum=item[173]
+                naccudsd=item[551]
+                normcog=item[386]
+                nacctmci=item[396]
+                demented=item[387]
+
+
+                # ealgdx output is in the form (ealgdx, debugstring)
+                ealgdx = self.search_ealgdx(cdrsum,naccudsd,normcog,nacctmci,demented)
+                debug_string = ('debug_string=naccid=' + str(naccid) + \
+                                ':naccvnum=' + str(naccvnum) + \
+                                ':cdrsum=' + str(cdrsum) + \
+                                ':normcog=' + str(normcog) +  \
+                                ':naccudsd=' + str(naccudsd) +  \
+                                ':demented=' + str(demented) + \
+                                ':nacctmci=' + str(nacctmci) + \
+                                ':ealgdx=' + ealgdx)
+                item.append(ealgdx)
+                item.append(debug_string)
+
+
+                writer.writerow(item)
+            #print(item)
+
+
+        #return
+
     #Sample Function for CLI args. REMOVE later
     def print_msg(self):
         print self.my_property
@@ -283,4 +342,6 @@ if __name__ == '__main__':
     # sample call to class fucntion
     #dxster.print_msg()
 
-    dxster.calc_algdx()
+    #dxster.calc_algdx()
+    #print('-----------------------------------')
+    dxster.calc_algdx_csv()
