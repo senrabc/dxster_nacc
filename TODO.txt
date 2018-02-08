@@ -1,0 +1,96 @@
+Keep A TODO LIST: (There is always lots of stuff TODO, so just do it ;)
+
+Lazy? copy this file ($ wget -O TODO.txt keepatodo.com/TODO.txt )
+
+  _  __                    _______ ____  _____   ____
+ | |/ /                 /\|__   __/ __ \|  __ \ / __ \
+ | ' / ___  ___ _ __   /  \  | | | |  | | |  | | |  | | ___ ___  _ __ ___
+ |  < / _ \/ _ \ '_ \ / /\ \ | | | |  | | |  | | |  | |/ __/ _ \| '_ ` _ \
+ | . \  __/  __/ |_) / ____ \| | | |__| | |__| | |__| | (__ (_) | | | | | |
+ |_|\_\___|\___| .__/_/    \_\_|  \____/|_____/ \____(_)___\___/|_| |_| |_|
+               | |
+               |_|
+
+
+TODO: [A](senrabc@gmail.com)20170531 @Story Create create_algdx.sql to create
+  the schema for the table for the alogorithm
+
+TODO: [A](senrabc@gmail.com)20170531 Add data to sqlite db
+
+
+TODO: [A](senrabc@gmail.com)20171109
+
+If you take a look at the factor analysis, it doesn’t seem like naccudsd==3
+is associated with many of the tests. It does seem like the tests are highly
+associated with the subcategories of the nacctmci domains
+(first factor analysis).
+
+
+
+
+1. 1st part - Return to the diagnostic algorithm and take out
+   mild/moderate MCI since we created that from our own guessing rather than
+   an evidence-based process. Program the algorithm with the four categories
+   of naccudsd only.
+
+   naccudsd 4 categories:
+   ----------------------------------------------------------------------------
+    1 = Normal cognition
+    2 = Impaired not MCI
+    3 = MCI
+    4 = Dementia
+
+2. Run the agreement between the original diagnosis and the consensus model
+   with the four categories of naccudsd. Report this as the first step in the
+   paper.
+
+3. Report the factor analysis on naccudsd and the individuals neuropscyh tests
+   in the paper.
+
+4. 2nd part - Program the algorithm with naccudsd==1, ==2, and ==4. Instead of
+   naccudsd==3, replace this with the nacctmci domains(we will discuss which),
+   so that we can provide further specificity to the MCI types.
+
+5. Run the agreement between the original diagnosis in NACC and now the
+   improved diagnosis with MCI specificity.
+
+6. Report the factor analysis supporting this move.
+
+Once these steps are completed (including 2 steps likely related to CDR SOB
+that are yet to be added), I believe we have completed the pilot algorithm
+programming steps and the remainder will be statistical analysis.
+
+Our original aims were:
+
+Aim 1: To subclassify older adults into well-defined cognitive status
+       entities, using a diagnostic algorithm which takes into account a
+       combination of amnestic and non-amnestic neuropsychological tests
+       scores and the assigned clinical dementia rating.
+
+Aim 2: To explore the demographic characteristics, protective factors, and
+       risk factors associated with cognitive status subtypes.
+
+Aim 3: To explore rates of progression to mild cognitive impairment and
+       dementia.
+
+TODO:[](senrabc@gmail.com),20180201, Handle Classification of last 2925
+
+Re: Out of 118343 visits, the eAlgdx is capable of classifying all but 2925.
+This is a classification error ratio of .0026. I think thats pretty low,
+meaning I think this data set can be analyzed. No if we want to work on the
+2925, what I think you will see in the 2925 are visits are cases where the
+normcog=0, nacctmci=8, and cdrsb 0-0.5. These variables are saying the person
+is normal and impaired at the same time, yet is was not covered in our initial
+model.
+
+It sounds like the people that aren't classified 1) do not have normal
+cognition 2) do not have MCI, and 3) have either no impairment or questionable
+impairment with the CDR. I am thinking that these folks should be classified
+as impaired not MCI, but is it possible to code them in two ways by creating
+two eALGx columns -  (1) as an 8 or whatever number can indicate that they are
+not classified (this is so we can explore their other characteristics
+statistically when the whole database is merged) and 2) clone the elagx column
+and classify them as impaired not MCI for complete classification with the
+caveat that 2925 had to be classified manually or with an updated decision
+tree? This will add some further depth to our exploration. We will then explore
+each of these columns for further info.       
