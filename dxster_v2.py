@@ -42,6 +42,7 @@ Options:
 """
 
 from docopt import docopt
+from datetime import datetime
 import csv
 import sqlite3
 import sys
@@ -154,6 +155,21 @@ class Dxster(object):
             sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
                 WHERE physdx_cdrsb = "%s" AND \
                 (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+        # Capture this case from
+        #https://www.alz.washington.edu/WEB/rdd_uds.pdf
+        #
+        # Clinicians are asked to designate the type of cognitive impairment for
+        # subjects who do not have normal cognition and who are not demented. If
+        # the subject had normal cognition or dementia, or was diagnosed as
+        # impaired, not MCI, then nacctmci=8.
+        # handle case where both naccudsd=2 and nacctmci=8 return `impaired not mci`
+        # for the given range of cdrsb
+
+        # this obvisouly needs to be refactored. Here we are forcing the correct
+        # value to return and return only once row so ealgdx will be set to the
+        # right value in this case.
+        elif ( int(naccudsd)==2 and int(nacctmci)==8 and 0.0<=float(cdrsum)<=0.5 ):
+            sql_stmt2 = "SELECT 'impaired not mci' FROM ealgdx_algorithm_table Limit 1"
 
         else:
             sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
@@ -199,14 +215,148 @@ class Dxster(object):
             else:
                     ealgdx = '[ERROR]: Multiple Values Returned for params. CNT=%s , SQL: %s ' % (str(i), sql_stmt2)
         # no rows returned is another problem. We always expect at least one
-        # row
+        # row. This means that this record has no existing classification. call
+        # it unclassified
         if i==0:
-                ealgdx = '[ERROR]: Query returned no mathces. CNT=%s , SQL: %s ' % (str(i), sql_stmt2)
+                ealgdx = 'unclassified'
 
         return ealgdx
 
+    def search_ealgdx_naccudsd(self,cdrsum,naccudsd,normcog,nacctmci,demented):
+        # THIS IS A VERSION THAT ONLY USES NACCUDSD
+        # TODO: read csv header, maybe... this is the ref data and needs to not chg.
 
+        # # for some reason you need to make sure you drop the table or the cache
+        # # will come back to bite you and create duplicates.
+        # self.c.execute("drop table if not exists ealgdx_algorithm_table")
+        self.c.execute("create table if not exists ealgdx_algorithm_table (physdx_cdrsb,\
+            npdx,npdx_nacc_uds_equivalent,algdx,ref_uri)")
 
+        # skip the header row
+        next(self.ealgdx_values, None)
+
+        # load the alog lookup data from the input file
+        for row in self.ealgdx_values:
+            values_list = '"' + row[0] + '","' + row[1] + '","' + row[2] + '","' \
+                + row[3] + '","' + row[4] + '"'
+            #print(values_list)
+            sql_stmt = 'INSERT INTO ealgdx_algorithm_table (physdx_cdrsb,npdx,\
+            npdx_nacc_uds_equivalent,algdx,ref_uri) VALUES ('+ values_list + ')'
+            if (self.DEBUG): print '[DEBUG] In search_algdx. sql_stmt=' + \
+            sql_stmt
+            self.c.execute(sql_stmt)
+
+        # search query. Most cases return only one result
+        # a few I have tested return 2 for naccudsd >=3 and a nacctmci >=2
+        # in this case the science team decided that naccudsd >= 3 ealgdx
+        # will take precedence. Need to trap multiples.
+
+        # example query
+        # SELECT algdx FROM ealgdx_algorithm_table
+        # Where physdx_cdrsb = '1.5' AND
+        # (
+            # npdx_nacc_uds_equivalent ='demented=0' or
+            # npdx_nacc_uds_equivalent ='nacctmci=2' or
+            # npdx_nacc_uds_equivalent ='normcog=0' or
+            # npdx_nacc_uds_equivalent ='naccudsd=3'
+        # )
+
+        # This first case handles disagrement between nacctmci with a normal
+        # but same cdrsum with naccudsd yielding `mild-moderate mci`
+        if ( int(naccudsd)==3 and 1.0<=float(cdrsum)<=1.5 ):
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+        # handle case where normcog = 1 and naccudsd =1 ALWAYS equivalents
+        # both return `normal`
+        elif ( int(naccudsd)==1 and int(normcog)==1 ):
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+        # handle case where both naccudsd=3 and nacctmci=2 return `dementia`
+        # for the given range of cdrsb
+        elif ( int(naccudsd)==3 and int(nacctmci)==2 and 4.5<=float(cdrsum)<=9.5 ):
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+        # handle case where both naccudsd=3 and nacctmci=1 return `mci`
+        # for the given range of cdrsb
+        elif ( int(naccudsd)==3 and int(nacctmci)==1 and 2.5<=float(cdrsum)<=4.0 ):
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+        # handle case where both naccudsd=3 and nacctmci=2 return `mci`
+        # for the given range of cdrsb
+        elif ( int(naccudsd)==3 and int(nacctmci)==2 and 2.5<=float(cdrsum)<=2.5 ):
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
+        # Capture this case from
+        #https://www.alz.washington.edu/WEB/rdd_uds.pdf
+        #
+        # Clinicians are asked to designate the type of cognitive impairment for
+        # subjects who do not have normal cognition and who are not demented. If
+        # the subject had normal cognition or dementia, or was diagnosed as
+        # impaired, not MCI, then nacctmci=8.
+        # handle case where both naccudsd=2 and nacctmci=8 return `impaired not mci`
+        # for the given range of cdrsb
+
+        # this obvisouly needs to be refactored. Here we are forcing the correct
+        # value to return and return only once row so ealgdx will be set to the
+        # right value in this case.
+        elif ( int(naccudsd)==2 and int(nacctmci)==8 and 0.0<=float(cdrsum)<=0.5 ):
+            sql_stmt2 = "SELECT 'impaired not mci' FROM ealgdx_algorithm_table Limit 1"
+
+        else:
+            sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
+                WHERE physdx_cdrsb = "%s" AND \
+                (npdx_nacc_uds_equivalent ="naccudsd=%s" or \
+                npdx_nacc_uds_equivalent ="normcog=%s" or \
+                npdx_nacc_uds_equivalent ="nacctmci=%s" or \
+                npdx_nacc_uds_equivalent ="demented=%s" )' % (cdrsum, naccudsd, \
+                normcog, nacctmci, demented)
+
+        #print(sql_stmt2)
+        if (self.DEBUG): print '[DEBUG] In search_algdx. sql_stmt2=' + sql_stmt2
+
+        # need to error out for now if 2 rows returned
+        # Most cases return only one result
+        # a few I have tested return 2 for naccudsd >=3 and a nacctmci >=2
+        # in this case the science team decided that naccudsd >= 3 ealgdx
+        # will take precedence. Need to trap multiples.
+        #print(sql_stmt2)
+
+        i = 0
+        #recset = self.c.execute('select * from ealgdx_algorithm_table')
+        recset = self.c.execute(sql_stmt2)
+        #print(recset)
+        for row in recset:
+            i=i+1
+
+            # set on the first run through so you can check to see if its the
+            # same every time. This happens with mci so if all duplicates are
+            # the same return the value. Example, if all row conditions return
+            # mci then the ealgdx should be mci otherwise if they disagree
+            # throw an error
+
+            local_ealgdx = row[0]
+
+            # Here there's only one row so thats the value we want.
+            if (i==1):
+                ealgdx = local_ealgdx
+            # this is where we are checking to see if each rec returned is
+            # the same
+            elif (local_ealgdx == row[0]):
+                    ealgdx = local_ealgdx
+            else:
+                    ealgdx = '[ERROR]: Multiple Values Returned for params. CNT=%s , SQL: %s ' % (str(i), sql_stmt2)
+        # no rows returned is another problem. We always expect at least one
+        # row. This means that this record has no existing classification. call
+        # it unclassified
+        if i==0:
+                ealgdx = 'unclassified'
+
+        return ealgdx
 
 
 
@@ -267,6 +417,15 @@ class Dxster(object):
 
     def calc_algdx_csv(self):
         f = open(self.input_file)
+
+        # handle output file settings. If one wasn't passed in as an argument
+        # then make one
+        if self.output_file:
+            out = self.output_file
+        else:
+            out = datetime.now().strftime("%Y%m%d_%H%M%S") + '_output_file.csv'
+        print(out)
+
         r = csv.reader(f, delimiter=',')
         row_0 = r.next()
         row_0.append('ealgdx')
@@ -276,7 +435,7 @@ class Dxster(object):
         # this needs to be fixed to pass in the output file path info from
         # the args. this goes in 12 seconds versus calc-algdx not completeing
         # as a string operation when run with 100k input rows
-        with open('../temp/output.csv', 'w') as csvoutput:
+        with open(out, 'w') as csvoutput:
             writer = csv.writer(csvoutput)
             writer.writerow(row_0)
 
@@ -311,6 +470,60 @@ class Dxster(object):
 
         #return
 
+    ## THIS IS A VERSION THAT ONLY USES NACCUDSD AS THE neuropscyhDX
+
+    def calc_algdx_csv_naccudsd(self):
+        f = open(self.input_file)
+
+        # handle output file settings. If one wasn't passed in as an argument
+        # then make one
+        if self.output_file:
+            out = self.output_file
+        else:
+            out = datetime.now().strftime("%Y%m%d_%H%M%S") + '_output_file.csv'
+        print(out)
+
+        r = csv.reader(f, delimiter=',')
+        row_0 = r.next()
+        row_0.append('ealgdx')
+        row_0.append('debug_string')
+
+        #print(row_0)
+        # this needs to be fixed to pass in the output file path info from
+        # the args. this goes in 12 seconds versus calc-algdx not completeing
+        # as a string operation when run with 100k input rows
+        with open(out, 'w') as csvoutput:
+            writer = csv.writer(csvoutput)
+            writer.writerow(row_0)
+
+
+            for item in r:
+                naccid=item[1]
+                naccvnum=item[2]
+                cdrsum=item[173]
+                naccudsd=item[551]
+                normcog=item[386]
+                nacctmci=item[396]
+                demented=item[387]
+
+
+                # ealgdx output is in the form (ealgdx, debugstring)
+                ealgdx = self.search_ealgdx_naccudsd(cdrsum,naccudsd,normcog,nacctmci,demented)
+                debug_string = ('debug_string=naccid=' + str(naccid) + \
+                                ':naccvnum=' + str(naccvnum) + \
+                                ':cdrsum=' + str(cdrsum) + \
+                                ':normcog=' + str(normcog) +  \
+                                ':naccudsd=' + str(naccudsd) +  \
+                                ':demented=' + str(demented) + \
+                                ':nacctmci=' + str(nacctmci) + \
+                                ':ealgdx=' + ealgdx)
+                item.append(ealgdx)
+                item.append(debug_string)
+
+
+                writer.writerow(item)
+        #return True
+
     #Sample Function for CLI args. REMOVE later
     def print_msg(self):
         print self.my_property
@@ -344,4 +557,8 @@ if __name__ == '__main__':
 
     #dxster.calc_algdx()
     #print('-----------------------------------')
-    dxster.calc_algdx_csv()
+    # use this call for old version pre 20180306
+    #dxster.calc_algdx_csv()
+
+    #use this version for calc that only uses NACCUDSD
+    dxster.calc_algdx_csv_naccudsd()
