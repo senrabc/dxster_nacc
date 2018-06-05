@@ -27,7 +27,7 @@
 
 """Dxster
 
-Usage: dxster_v2.py [options]
+Usage: dxster_v2.py [options] written and tested for python 2.7x
 
 #time python dxster_v2.py -i ../temp/top100_nacc_dataset_0302217.csv -e ../docs/ealgdx_algorithm_table.csv
 
