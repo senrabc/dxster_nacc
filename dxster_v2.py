@@ -9,6 +9,7 @@
 #
 # Copyright 2017 Christopher P. Barnes <senrabc@gmail.com>
 # Copyright 2017 Kevin Hanson <kshanson@ufl.edu>
+# Copyright 2017 Shanna Burke <sburke@fiu.edu>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -66,8 +67,7 @@ class Dxster(object):
     DEBUG = False
     #DEBUG = True
 
-    if (DEBUG): print '[DEBUG] Debug on... Will now print all debug statements \
-        to stdout.'
+    if (DEBUG): print('[DEBUG] Debug on... Will now print all debug statements to stdout.')
 
     def __init__(self, **kwargs):
 
@@ -225,7 +225,8 @@ class Dxster(object):
     def search_ealgdx_naccudsd(self,cdrsum,naccudsd,normcog,nacctmci,demented):
         # THIS IS A VERSION THAT ONLY USES NACCUDSD
         # TODO: read csv header, maybe... this is the ref data and needs to not chg.
-
+        # TODO: REFACTOR ALL LOADING OF EALGDX REF DATA TO ANOTHER place
+        #       THIS ONLY NEEEDS TO GET PROCESSED ONCE PER RUN NOT EVERY search.
         # # for some reason you need to make sure you drop the table or the cache
         # # will come back to bite you and create duplicates.
         # self.c.execute("drop table if not exists ealgdx_algorithm_table")
@@ -267,27 +268,27 @@ class Dxster(object):
             sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
                 WHERE physdx_cdrsb = "%s" AND \
                 (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
-        # handle case where normcog = 1 and naccudsd =1 ALWAYS equivalents
-        # both return `normal`
-        elif ( int(naccudsd)==1 and int(normcog)==1 ):
+        # handle case where naccudsd =1
+        #  return `normal`
+        elif ( int(naccudsd)==1 ):
             sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
                 WHERE physdx_cdrsb = "%s" AND \
                 (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
         # handle case where both naccudsd=3 and nacctmci=2 return `dementia`
         # for the given range of cdrsb
-        elif ( int(naccudsd)==3 and int(nacctmci)==2 and 4.5<=float(cdrsum)<=9.5 ):
+        elif ( int(naccudsd)==3  and 4.5<=float(cdrsum)<=9.5 ):
             sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
                 WHERE physdx_cdrsb = "%s" AND \
                 (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
         # handle case where both naccudsd=3 and nacctmci=1 return `mci`
         # for the given range of cdrsb
-        elif ( int(naccudsd)==3 and int(nacctmci)==1 and 2.5<=float(cdrsum)<=4.0 ):
+        elif ( int(naccudsd)==3  and 2.5<=float(cdrsum)<=4.0 ):
             sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
                 WHERE physdx_cdrsb = "%s" AND \
                 (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
         # handle case where both naccudsd=3 and nacctmci=2 return `mci`
         # for the given range of cdrsb
-        elif ( int(naccudsd)==3 and int(nacctmci)==2 and 2.5<=float(cdrsum)<=2.5 ):
+        elif ( int(naccudsd)==3  and 2.5<=float(cdrsum)<=2.5 ):
             sql_stmt2 = 'SELECT algdx FROM ealgdx_algorithm_table \
                 WHERE physdx_cdrsb = "%s" AND \
                 (npdx_nacc_uds_equivalent ="naccudsd=%s")' % (cdrsum,naccudsd)
@@ -304,7 +305,7 @@ class Dxster(object):
         # this obvisouly needs to be refactored. Here we are forcing the correct
         # value to return and return only once row so ealgdx will be set to the
         # right value in this case.
-        elif ( int(naccudsd)==2 and int(nacctmci)==8 and 0.0<=float(cdrsum)<=0.5 ):
+        elif ( int(naccudsd)==2  and 0.0<=float(cdrsum)<=0.5 ):
             sql_stmt2 = "SELECT 'impaired not mci' FROM ealgdx_algorithm_table Limit 1"
 
         else:
