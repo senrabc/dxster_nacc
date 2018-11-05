@@ -1,0 +1,34 @@
+*******************************************************************************
+* NOTES: Stuff that you need to write down that you don't have a home for yet.
+*         This happens regularly to me when working with data.
+*******************************************************************************
+
+20170629 - Test subject has the following conditions
+
+
+  REF385 At first timepoint in table,
+
+  ealgdx_nacc(5,4,0,8,1)
+
+  CDRSB(CDRSUM) = 5 (0.0, 0.5, 1.0, 1.5, …, 18.0,
+    scores of 16.5 and 17.5 not possible))
+  NACCUDSD = 4 (1 = Normal cognition, 2 = Impaired-not-MCI, 3 = MCI,
+      4 = Dementia)
+  NORMCOG = 0 (0=NO, 1 YES)
+  NACCTMCI = 8 (1 = Amnestic MCI- single domain,
+    2 = Amnestic MCI- multiple domain, 3 = Non-amnestic MCI- single domain,
+    4 = Non-amnestic MCI- multiple domain, 8 = No diagnosis of MCI)
+  DEMENTED = 1 (0 = NO, 1=YES)
+
+  OK, manual eAlgDx
+
+  +-------+----------+--------------------------+----------+
+  | CDRSB |   NPDX   | NPDX_NACC_UDS_EQUIVALENT |  ALGDX   |
+  +-------+----------+--------------------------+----------+
+  |       |          |                          |          |
+  |   5.0 | dementia | demented=1               | dementia |
+  +-------+----------+--------------------------+----------+
+
+
+
+  
