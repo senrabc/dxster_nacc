@@ -551,15 +551,5 @@ if __name__ == '__main__':
 
     )
 
-    # sample usage output for ali args form docopt. REMOVE later
-    #print args
-    # sample call to class fucntion
-    #dxster.print_msg()
-
-    #dxster.calc_algdx()
-    #print('-----------------------------------')
-    # use this call for old version pre 20180306
-    #dxster.calc_algdx_csv()
-
     #use this version for calc that only uses NACCUDSD
     dxster.calc_algdx_csv_naccudsd()

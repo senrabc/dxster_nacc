@@ -31,15 +31,4 @@
 
 
 
-  1. What to do with multiple timepoints, worst or least or all?
-    Include TIMEPOINT data
-  2. Do any of these take precedence over the others? For example according to
-      UDS codebook, ref:https://www.alz.washington.edu/WEB/rdd_uds.pdf,
-      NACCTMCI=8 , is 'NO DIAGNOSIS of MCI'
-  3. I should probably give each case a uniqueID (hash?, GUID?)
-
-
-  SQL
-  ------------------------------------------------------------------------------
-
-  SELECT o.ealgdx, r.NACCADC,r.NACCID as NACCID, o.naccid as o_naccid, r.NACCVNUM, o.naccvnum as o_naccvnum from tbl_raw_nacc_20170322_sb r inner join output_from_cleaned_nacc_dataset_032217 o on r.NACCID = o.naccid AND r.NACCVNUM = o.naccvnum LIMIT 20
+  
