@@ -21,11 +21,11 @@ The DxSter module takes a Clincal  diagnosis (PhyDx) and the Neurophyscological 
 This work has been supported by the Florida Department of Health's Ed and Ethel Moore Alzheimer's Disease Research Program grant number 66315-UF, the National Institute of Aging, and the 1Florida Alzheimer's Research Center grant number P50AG047266.
 
 #Cite Us
-Please reference Clinical and Translational Science - Informatics and Technology group (CTS-IT) in any research report, journal, or publication that requires citation of authors' work. Recognition of CTS-IT resources you used to perform research is important for acquiring funding for the next generation of informatics services and our research and development activities in software development and information science.
+Please reference Dr. Shanna Burke, PI (sburke(at)fiu.edu) and the Clinical and Translational Science - Informatics and Technology group (CTS-IT) in any research report, journal, or publication that requires citation of authors' work. Recognition of CTS-IT resources you used to perform research is important for acquiring funding for the next generation of informatics services and our research and development activities in software development and information science.
 
 At minimum, a citation should include: Clinical and Translational Science Informatics and Technology group at the University of Florida
 
-Our suggested acknowledgement is (select one or more items within the braces, as appropriate): The authors acknowledge the Clinical and Translational Science Informatics and Technology group at the University of Florida for providing {Python software library, code, examples, calculator} resources that have contributed to the research results reported within this paper. URL: http://www.ncbi.nlm.nih.gov/pubmed/20306566
+Our suggested acknowledgement is (select one or more items within the braces, as appropriate): The authors acknowledge Dr. Shanna Burke, (sburke(at)fiu.edu) and the Clinical and Translational Science Informatics and Technology group at the University of Florida for providing {Python software library, code, examples, calculator} resources that have contributed to the research results reported within this paper. URL: http://www.ncbi.nlm.nih.gov/pubmed/20306566
 
 
 
